@@ -1,86 +1,92 @@
 require 'matrix.rb'
-require './lib/row.rb'
+require './lib/group.rb'
 
 class Sudoku
-  attr_reader :matrix, :rows, :cols
+  attr_reader :matrix, :rows, :cols, :boxes
+  ROW_SPACER = "------+------+------"
 
   def initialize(puzzle_string=nil)
-    @puzzle_string = puzzle_string  || File.read("spec/fixtures/valid_incomplete.sudoku")
-    @rows = []
-    @cols = []
+    @puzzle_string = puzzle_string #|| File.read("spec/fixtures/valid_incomplete.sudoku")
+    @rows, @cols, @boxes = [], [], []
     parse_puzzle
-    @matrix = Matrix.rows(array_rows)
-    puts array_rows
   end
 
   def parse_puzzle
     rows = @puzzle_string.split("\n")
-    rows = rows.delete_if { |row| row == row_spacer}
+    rows = rows.delete_if { |row| row == ROW_SPACER}
 
     @rows = rows.inject([]) do |result, element|
       values = element.gsub("|", "").split(" ").map(&:to_i)
-      row = values.map {|v| v == 0 ? 0 : v}
-      result << Row.new(row)
+      row = values.map {|v| v == 0 ? nil : v}
+      result << Group.new(row)
+    end
+
+    @matrix = Matrix.rows(array_rows)
+
+    @cols = array_cols.inject([]) do |result, col|
+      result << Group.new(col)
+    end
+
+    parse_boxes
+  end
+
+  def parse_boxes
+    boxes = []
+    array_rows.each_slice(3) do |row_set|
+      boxes_tmp = [[],[],[]]
+      row_set.each do |row|
+        row.each_slice(3).with_index do |s,i|
+          boxes_tmp[i] = boxes_tmp[i] + s
+        end
+      end
+      boxes += boxes_tmp
+    end
+    @boxes = boxes.inject([]) do |result, box|
+      result << Group.new(box)
     end
   end
   
-  def validate
-    if !valid?
-      invalid_message
-    elsif valid? && incomplete?
-      valid_incomplete_message
-    else
-      valid_message
-    end
-   
-  end
-
   def array_rows
     @rows.inject([]) {|result, element| result << element.values }
   end
 
-  def valid?
-    rows_valid? && cols_valid?
-  end
-
-  def row_spacer
-    "------+------+------"
-  end
-
-  def cols
+  def array_cols
     matrix.transpose.to_a
   end
 
-  def cols_valid?
-    cols.each do |col|
-      col = Row.new(col)
-      return false unless col.valid?
-    end
-    return true
+  def complete?
+    rows_complete? && 
+    cols_complete? && 
+    boxes_complete?
+  end
+
+  def valid?
+    rows_valid? && 
+    cols_valid? && 
+    boxes_valid?
+  end
+
+  def rows_complete?
+    @rows.all? {|row| row.complete?}
   end
 
   def rows_valid?
-    rows = matrix.to_a
-    rows.each do |row|
-      row = Row.new(row)
-      return false unless row.valid?
-    end
-    return true
+    @rows.all? {|row| row.valid? }
   end
 
-  def incomplete?
-    array_rows.flatten.include?(0)
+  def cols_complete?
+    @cols.all? {|col| col.complete?}
   end
 
-  def valid_message
-    "This sudoku is valid."
+  def cols_valid?
+    @cols.all? {|col| col.valid?}
   end
 
-  def valid_incomplete_message
-    "This sudoku is valid, but incomplete."
+  def boxes_complete?
+    @boxes.all? {|box| box.complete?}
   end
 
-  def invalid_message
-    "This sudoku is invalid."
+  def boxes_valid?
+    @boxes.all? {|box| box.valid?}
   end
 end
