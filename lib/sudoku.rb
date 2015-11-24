@@ -1,4 +1,3 @@
-require 'matrix.rb'
 require './lib/group.rb'
 
 class Sudoku
@@ -6,28 +5,31 @@ class Sudoku
   ROW_SPACER = "------+------+------"
 
   def initialize(puzzle_string=nil)
-    @puzzle_string = puzzle_string #|| File.read("spec/fixtures/valid_incomplete.sudoku")
+    @puzzle_string = puzzle_string
     @rows, @cols, @boxes = [], [], []
     parse_puzzle
   end
 
   def parse_puzzle
+    parse_rows
+    parse_cols
+    parse_boxes
+  end
+
+  def parse_rows
     rows = @puzzle_string.split("\n")
     rows = rows.delete_if { |row| row == ROW_SPACER}
-
     @rows = rows.inject([]) do |result, element|
       values = element.gsub("|", "").split(" ").map(&:to_i)
       row = values.map {|v| v == 0 ? nil : v}
       result << Group.new(row)
     end
+  end
 
-    @matrix = Matrix.rows(array_rows)
-
+  def parse_cols
     @cols = array_cols.inject([]) do |result, col|
       result << Group.new(col)
     end
-
-    parse_boxes
   end
 
   def parse_boxes
@@ -51,7 +53,7 @@ class Sudoku
   end
 
   def array_cols
-    matrix.transpose.to_a
+    array_rows.transpose
   end
 
   def complete?
@@ -66,27 +68,12 @@ class Sudoku
     boxes_valid?
   end
 
-  def rows_complete?
-    @rows.all? {|row| row.complete?}
-  end
-
-  def rows_valid?
-    @rows.all? {|row| row.valid? }
-  end
-
-  def cols_complete?
-    @cols.all? {|col| col.complete?}
-  end
-
-  def cols_valid?
-    @cols.all? {|col| col.valid?}
-  end
-
-  def boxes_complete?
-    @boxes.all? {|box| box.complete?}
-  end
-
-  def boxes_valid?
-    @boxes.all? {|box| box.valid?}
+  %w(rows cols boxes).each do |group|
+    %w(complete? valid?).each do |method|
+      define_method "#{group}_#{method}" do
+        instance_variable_get("@#{group}").all? {|g| g.send(method.to_sym)}
+      end
+    end
   end
 end
+
