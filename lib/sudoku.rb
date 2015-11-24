@@ -1,7 +1,7 @@
 require './lib/group.rb'
 
 class Sudoku
-  attr_reader :matrix, :rows, :cols, :boxes
+  attr_reader :rows, :cols, :boxes
   ROW_SPACER = "------+------+------"
 
   def initialize(puzzle_string=nil)
@@ -18,7 +18,7 @@ class Sudoku
 
   def parse_rows
     rows = @puzzle_string.split("\n")
-    rows = rows.delete_if { |row| row == ROW_SPACER}
+    rows = rows.delete_if { |row| row == ROW_SPACER }
     @rows = rows.inject([]) do |result, element|
       values = element.gsub("|", "").split(" ").map(&:to_i)
       row = values.map {|v| v == 0 ? nil : v}
