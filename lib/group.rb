@@ -7,11 +7,12 @@ class Group
   end
 
   def parse_values
+    @values = @values.delete_if {|v| v > 9 || v < 0}
     @values = @values.map { |v| v == 0 ? nil : v }
   end
 
   def valid?
-    values.compact == values.compact.uniq
+    (@values.compact == @values.compact.uniq) && @values.size == 9
   end
 
   def complete?

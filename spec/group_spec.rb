@@ -38,5 +38,17 @@ describe 'Group' do
       group = Group.new(values)
       expect(group.valid?).to eq false
     end
+
+    it 'returns false if any of the numbers are greater than 9' do
+      values = [10,0,3,4,5,6,7,8,1]
+      group = Group.new(values)
+      expect(group.valid?).to eq false
+    end
+
+    it 'returns false if any of the numbers are less than 0' do
+      values = [-3,0,3,4,5,6,7,8,1]
+      group = Group.new(values)
+      expect(group.valid?).to eq false
+    end
   end
 end
