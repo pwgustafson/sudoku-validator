@@ -10,6 +10,7 @@ class Sudoku
     parse_puzzle
   end
 
+
   def parse_puzzle
     parse_rows
     parse_cols

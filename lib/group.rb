@@ -7,7 +7,7 @@ class Group
   end
 
   def parse_values
-    @values = @values.delete_if {|v| v > 9 || v < 0}
+    @values = @values.delete_if {|v| v.to_i > 9 || v.to_i < 0}
     @values = @values.map { |v| v == 0 ? nil : v }
   end
 
